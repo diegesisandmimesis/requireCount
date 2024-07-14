@@ -21,29 +21,68 @@
 
 #include "requireCount.h"
 
-versionInfo: GameID
-        name = 'requireCount Library Demo Game'
-        byline = 'Diegesis & Mimesis'
-        desc = 'Demo game for the requireCount library. '
-        version = '1.0'
-        IFID = '12345'
-	showAbout() {
-		"This is a simple test game that demonstrates the features
-		of the requireCount library.
-		<.p>
-		Consult the README.txt document distributed with the library
-		source for a quick summary of how to use the library in your
-		own games.
-		<.p>
-		The library source is also extensively commented in a way
-		intended to make it as readable as possible. ";
-	}
-;
-gameMain: GameMainDef
-	initialPlayerChar = me
-	inlineCommand(cmd) { "<b>&gt;<<toString(cmd).toUpper()>></b>"; }
-	printCommand(cmd) { "<.p>\n\t<<inlineCommand(cmd)>><.p> "; }
+versionInfo: GameID;
+gameMain: GameMainDef initialPlayerChar = me;
+
+DefineTAction(Draw);
+VerbRule(Draw)
+	'draw' singleDobj : DrawAction
+	verbPhrase = 'draw/drawing (what)'
 ;
 
-startRoom: Room 'Void' "This is a featureless void.";
+DefineTAction(DrawCount);
+VerbRule(DrawCount)
+	'draw' singleNumber dobjList : DrawCountAction
+	verbPhrase = 'draw/drawing (what)'
+;
+
+modify Thing
+	dobjFor(Draw) {
+		verify() {
+			illogical('{You/He} can\'t draw {that dobj/him}. ');
+		}
+	}
+	dobjFor(DrawCount) { action() { replaceAction(Draw, self); } }
+;
+
+class Card: Thing '(blank) playing card' 'playing card'
+	"A blank playing card. "
+	isEquivalent = true
+;
+
+class CardUnthing: Unthing '(single) (individual) playing card' 'card'
+	notHereMsg = 'Nope. '
+	dobjFor(Draw) {
+		verify() { dangerous; }
+		action() { replaceAction(Draw, deck); }
+	}
+	dobjFor(DrawCount) {
+		verify() { dangerous; }
+		action() {
+			replaceActionWithCount(DrawCount, deck);
+		}
+	}
+;
+
+startRoom: Room 'Void' "This is a featureless void. ";
 +me: Person;
++deck: Thing 'deck (of) (card)/cards' 'deck of cards'
+	"It's a deck of playing cards. "
+	dobjFor(Draw) {
+		verify() {}
+		action() { replaceAction(DrawCount, self); }
+	}
+	dobjFor(DrawCount) {
+		verify() {}
+		action() {
+			local n;
+
+			requireCount;
+
+			n = gAction.numMatch.getval();
+			defaultReport('{You/He} draw{s} <<spellInt(n)>>
+				card<<((n == 1) ? '' : 's')>>. ');
+		}
+	}
+;
+++CardUnthing;
