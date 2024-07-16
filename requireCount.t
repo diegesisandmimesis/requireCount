@@ -245,3 +245,22 @@ _replaceActionWithCount(actor, actionClass, count, [objs]) {
 	execNestedAction(true, nil, actor, action);
 	exit;
 }
+
+class TActionWithCount: TAction
+;
+
+grammar singleCount(empty): [badness 400] : EmptyLiteralPhraseWithCountProd
+	resolveLiteral(results) {}
+;
+
+grammar singleCount(digits): tokInt->num_ : NumberProd
+	getval() { return(toInteger(num_)); }
+	getStrVal() { return(num_); }
+;
+
+grammar singleCount(spelled): spelledNumber->num_ : NumberProd
+	getval() { return num_.getval(); }
+;
+
+class EmptyLiteralPhraseWithCountProd: EmptyLiteralPhraseProd
+;

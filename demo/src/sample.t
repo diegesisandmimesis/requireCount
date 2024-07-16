@@ -102,3 +102,48 @@ startRoom: Room 'Void' "This is a featureless void. ";
 ;
 ++CardUnthing;
 ++CardsUnthing;
++pebble: Thing '(small) (round) pebble*pebbles' 'pebble'
+	"A small, round pebble. "
+	dobjFor(Foozle) {
+		verify() {}
+		action() {
+			requireCount;
+			defaultReport('{You/He} foozle{s}
+				<<spellInt(gActionCount)>> pebbles. ');
+		}
+	}
+;
++rock: Thing '(ordinary) rock' 'rock'
+	"An ordinary rock. "
+	dobjFor(Foozle) {
+		verify() {}
+		action() {
+			requireCount;
+			defaultReport('{You/He} foozle{s}
+				<<spellInt(gActionCount)>> pebbles. ');
+		}
+	}
+;
+
+
+DefineTAction(Foozle);
+/*
+DefineTActionWithCount(Foozle);
+VerbRule(FoozleWithoutCount)
+	'foozle' dobjList
+	: FoozleWithoutCountAction
+	verbPhrase = 'foozle/foozling (what)'
+;
+*/
+VerbRule(Foozle)
+	'foozle' literalCount dobjList
+	: FoozleAction
+	verbPhrase = 'foozle/foozling (what)'
+;
+
+modify Thing
+	dobjFor(Foozle) {
+		verify() { illogical('{You/He} can\'t foozle that. '); }
+	}
+;
+
