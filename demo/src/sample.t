@@ -54,20 +54,18 @@ class CardUnthing: Unthing '(single) (individual) playing card' 'card'
 	notHereMsg = 'Nope. '
 	dobjFor(Draw) {
 		verify() { dangerous; }
-		action() { replaceAction(Draw, deck); }
+		action() { replaceAction(Draw, deck.cards); }
 	}
 	dobjFor(DrawCount) {
 		verify() { dangerous; }
 		action() {
-			replaceActionWithCount(DrawCount, deck);
+			replaceActionWithCount(DrawCount, deck.cards);
 		}
 	}
 ;
 
-startRoom: Room 'Void' "This is a featureless void. ";
-+me: Person;
-+deck: Thing 'deck (of) (card)/cards' 'deck of cards'
-	"It's a deck of playing cards. "
+class CardsUnthing: CardUnthing 'playing cards' 'cards'
+	isPlural = true
 	dobjFor(Draw) {
 		verify() {}
 		action() { replaceAction(DrawCount, self); }
@@ -85,4 +83,22 @@ startRoom: Room 'Void' "This is a featureless void. ";
 		}
 	}
 ;
+
+startRoom: Room 'Void' "This is a featureless void. ";
++me: Person;
++deck: Thing 'deck (of) (card)/cards' 'deck of cards'
+	"It's a deck of playing cards. "
+	cards = (contents.valWhich({ x: x.ofKind(CardsUnthing) }))
+	dobjFor(Draw) {
+		verify() { }
+		action() { replaceAction(Draw, cards); }
+	}
+	dobjFor(DrawCount) {
+		verify() { }
+		action() {
+			replaceActionWithCount(DrawCount, deck.cards);
+		}
+	}
+;
 ++CardUnthing;
+++CardsUnthing;
