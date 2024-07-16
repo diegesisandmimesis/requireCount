@@ -19,6 +19,11 @@ requireCountModuleID: ModuleID {
         listingOrder = 99
 }
 
+grammar countNounPhrase(number):
+	numberPhrase->quant_ nounPhrase->np_
+	: LayeredNounPhraseProd
+;
+
 // Library message for the "how many" question.
 // Similar to askMissingObject() in adv3/en_us/msg_neu.t
 modify playerMessages
@@ -57,7 +62,7 @@ _requireCount() {
 // parser and try to handle it as a normal command.
 // This is similar to tryAskingForObject() in adv3/parser.t
 tryAskingForCount() {
-	local str;
+	local str, toks;
 
 	// Display a normal prompt and handle input normally.
 	str = readMainCommandTokens(rmcAskObject);
@@ -72,18 +77,67 @@ tryAskingForCount() {
 	if(str == nil)
 		throw new ReplacementCommandStringException(nil, nil, nil);
 
-	// This will be the input string.
+	// Input tokens.
+	toks = str[2];
+
+	// Input String.
 	str = str[1];
 
-	// If the input wasn't a number (with or without whitespace) then
-	// we're not going to handle it here, and we just punt it back
-	// to the parser.
-	if(rexMatch('^<space>*(<Digit>+)<space>*$', str) == nil)
-		throw new ReplacementCommandStringException(str, nil, nil);
+	// If the input was just a number and whitespace we can immediately
+	// punt this off to our logic for handling it in Action.
+	if(rexMatch('^<space>*(<Digit>+)<space>*$', str) != nil) {
+		// The input was a number, so we use our bespoke retry
+		// method on Action.
+		gAction.retryWithMissingCount(gAction,
+			toInteger(rexGroup(1)[3]));
+		return;
+	}
 
-	// The input was a number, so we use our bespoke retry
-	// method on Action.
-	gAction.retryWithMissingCount(gAction, toInteger(rexGroup(1)[3]));
+	// Try seeing if the input looks like a noun phrase with a count,
+	// which will happen if the player responds to the "how many pebbles
+	// do you want to [action]?" with "10 pebbles" instead of just
+	// "10".
+	// We don't check the return value because if the input looks
+	// like a noun phrase it'll try to exit the current command
+	// and execute the new one.
+	_tryAskingForCountPhrase(str, toks);
+
+	// Everything is terrible, give up.
+	// We punt the command string back to the parser via exception.
+	throw new ReplacementCommandStringException(str, nil, nil);
+}
+
+
+_tryAskingForCountPhrase(str, toks) {
+	local matchList, rankings, res;
+
+	// See if the input looks like a noun phrase with a count.
+	matchList = countNounPhrase.parseTokens(toks, cmdDict);
+
+	// Nope, bail.
+	if(!matchList || !matchList.length)
+		return;
+
+	// Ask the current actions dobj resolver to figure out
+	// if the thing that looks like a noun phrase with a count
+	// makes sense in context.
+	res = gAction.getDobjResolver(gIssuingActor, gActor, true);
+	rankings = MissingObjectRanking.sortByRanking(matchList, res);
+
+	// Didn't work, bail.
+	if((rankings[1].nonMatchCount != 0)
+		&& (rankings[1].miscWordListCount != 0))
+		return;
+
+	// Everything else worked, but somehow or other we reached this
+	// point without actually getting a count out of it.  This
+	// should never happen.
+	if(!rankings[1].match.quant_)
+		return;
+
+	// Retry the old command with the new count.
+	gAction.retryWithMissingCount(gAction,
+		rankings[1].match.quant_.getval());
 }
 
 modify Action
@@ -101,6 +155,7 @@ modify Action
 		action.numMatch.getval = n;
 
 		action.initForMissingCount(orig);
+
 		resolveAndReplaceAction(action);
 	}
 
