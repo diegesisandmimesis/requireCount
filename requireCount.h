@@ -2,6 +2,8 @@
 // requireCount.h
 //
 
+#define gActionCount ((gAction && gAction.numMatch) \
+	? gAction.numMatch.getval : nil)
 #define requireCount (_requireCount())
 
 #define replaceActionWithCount(action, objs...) \

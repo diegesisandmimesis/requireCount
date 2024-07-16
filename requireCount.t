@@ -6,6 +6,41 @@
 //	in actions.
 //
 //
+// USAGE
+//
+//	Declare a verb containing the singleNumber macro where
+//	a count should go:
+//
+//		VerbRule(Foozle)
+//			'foozle' singleNumber dobjList
+//			: FoozleAction
+//			verbPhrase = 'foozle/foozling (what)'
+//		;
+//
+//	Then on Things you can use requireCount to prompt for a count if
+//	one is missing:
+//
+//		pebble: Thing '(small) (round) pebble' 'pebble'
+//			"A small, round pebble. "
+//			dobjFor(Foozle) {
+//				action() {
+//					requireCount;
+//					defaultReport('{You/He} foozle{s}
+//						<<spellInt(gActionCount)>>
+//						pebbles. ');
+//				}
+//			}
+//		;
+//
+//	Then if a player tries >FOOZLE PEBBLE (without a count):
+//
+//		>FOOZLE
+//		How many pebbles do you want to foozle?
+//
+//		>10
+//		You foozle ten pebbles.
+//
+//
 #include <adv3.h>
 #include <en_us.h>
 
