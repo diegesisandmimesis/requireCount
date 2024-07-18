@@ -73,10 +73,12 @@ modify playerMessages
 // handling the response.
 // The requireCount macro points to this function.
 _requireCount() {
-aioSay('\ngAction = <<toString(gAction)>>\n ');
-aioSay('\nliteral = <<toString(gLiteral)>>\n ');
-aioSay('\nnum = <<toString(gAction.num_)>>\n ');
-aioSay('\nquant = <<toString(gAction.quant_)>>\n ');
+	if(gAction.dobjMatch && gAction.dobjMatch.newMatch
+		&& gAction.dobjMatch.newMatch.num_) {
+		gAction.numMatch = new NumberProd();
+		gAction.numMatch.getval = gAction.dobjMatch.newMatch.num_.getval();
+		//aioSay('\n\tnum = <<toString(gAction.dobjMatch.newMatch.num_.getval())>>\n ');
+	}
 	// We check to see if we already have a count on the action.
 	// If we do, we take no action.
 	if(!gActionCount) {

@@ -12,8 +12,7 @@ class TCAction: TAction
 	resolveNouns(srcActor, dstActor, results) {
 		inherited(srcActor, dstActor, results);
 	}
-	askDobjResponseProd = fooList
-	//askDobjResponseProd = nounList
+	askDobjResponseProd = nounListWithCount
 ;
 
 grammar literalCount(empty): [badness 400] : EmptyLiteralPhraseWithCountProd;
@@ -55,11 +54,15 @@ grammar qualifiedPluralNounPhrase(count):
 	}
 ;
 
-grammar fooList(terminal): terminalNounPhrase->np_ : FooListProd;
-grammar fooList(nonTerminal): completeNounPhrase->np_ : FooListProd;
-grammar fooList(list): nounMultiList->lst_ : FooListProd;
+//grammar nounListWithCount(terminal): terminalNounPhrase->np_ : NounListWithCountProd;
+//grammar nounListWithCount(nonTerminal): completeNounPhrase->np_ : NounListWithCountProd;
+//grammar nounListWithCount(list): nounMultiList->lst_ : NounListWithCountProd;
+grammar nounListWithCount(count):
+	(literalCount->num_ indetSingularNounPhrase->np_)
+	| (literalCount->num_ indetPluralNounPhrase->np_)
+	: NounListWithCountProd;
 
-class FooListProd: NounListProd
+class NounListWithCountProd: NounListProd
 	resolveNouns(resolver, results) {
 		return(np_.resolveNouns(resolver, results));
 	}
