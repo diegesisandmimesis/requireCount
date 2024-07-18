@@ -78,7 +78,7 @@ _requireCount() {
 	// enters a bare verb (>FOOZLE) and responds to the
 	// object prompt ("What do you want to foozle?") with a count
 	// and a noun phrase (">10 PEBBLES")
-	if(gAction.dobjMatch && gAction.dobjMatch.newMatch
+	if(!gActionCount && gAction.dobjMatch && gAction.dobjMatch.newMatch
 		&& gAction.dobjMatch.newMatch.num_) {
 		gAction.numMatch = new NumberProd();
 		gAction.numMatch.getval = gAction.dobjMatch

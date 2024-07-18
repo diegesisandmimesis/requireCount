@@ -10,8 +10,24 @@
 
 #include "requireCount.h"
 
-class TCAction: TAction
+class TActionWithCount: TAction
+	useDobjListForCount = true
+
 	askDobjResponseProd = nounListWithCount
+
+	resolveNouns(srcActor, dstActor, results) {
+		inherited(srcActor, dstActor, results);
+
+		if(useDobjListForCount != true)
+			return;
+
+		if(!dobjList_ || !dobjList_.length)
+			return;
+
+		numMatch = new NumberProd();
+		numMatch.getval = dobjList_.length;
+		dobjList_ = [ dobjList_[1] ];
+	}
 ;
 
 grammar nounCount(empty): [badness 400] : EmptyLiteralPhraseWithCountProd;

@@ -24,10 +24,11 @@
 versionInfo: GameID;
 gameMain: GameMainDef initialPlayerChar = me;
 
-DefineTAction(Draw);
+DefineTActionWithCount(Draw);
 VerbRule(Draw)
 	'draw' dobjCount dobjList : DrawAction
 	verbPhrase = 'draw/drawing (what)'
+	useDobjListForCount = nil
 ;
 
 modify Thing
@@ -68,6 +69,11 @@ class CardsUnthing: CardUnthing 'playing cards' 'cards'
 	}
 ;
 
+class Pebble: FoozleThing '(small) (round) pebble*pebbles' 'pebble'
+	"A small, round pebble. "
+	isEquivalent = true
+;
+
 startRoom: Room 'Void' "This is a featureless void. ";
 +me: Person;
 +deck: Thing 'deck (of) (card)/cards' 'deck of cards'
@@ -84,16 +90,16 @@ startRoom: Room 'Void' "This is a featureless void. ";
 ;
 ++CardUnthing;
 ++CardsUnthing;
-+pebble: FoozleThing '(small) (round) pebble*pebbles' 'pebble'
-	"A small, round pebble. "
-;
++Pebble;
++Pebble;
++Pebble;
 +rock: FoozleThing '(ordinary) rock*rocks' 'rock'
 	"An ordinary rock. "
 ;
 
-DefineTCAction(Foozle);
+DefineTActionWithCount(Foozle);
 VerbRule(Foozle)
-	'foozle' dobjCount singleDobj
+	'foozle' dobjCount dobjList
 	: FoozleAction
 	verbPhrase = 'foozle/foozling (what)'
 ;
