@@ -8,11 +8,11 @@
 //
 // USAGE
 //
-//	Declare a verb containing the singleNumber macro where
+//	Declare a verb containing the dobjCount macro where
 //	a count should go:
 //
 //		VerbRule(Foozle)
-//			'foozle' singleNumber dobjList
+//			'foozle' dobjCount dobjList
 //			: FoozleAction
 //			verbPhrase = 'foozle/foozling (what)'
 //		;
@@ -34,7 +34,7 @@
 //
 //	Then if a player tries >FOOZLE PEBBLE (without a count):
 //
-//		>FOOZLE
+//		>FOOZLE PEBBLE
 //		How many pebbles do you want to foozle?
 //
 //		>10
@@ -73,12 +73,18 @@ modify playerMessages
 // handling the response.
 // The requireCount macro points to this function.
 _requireCount() {
+	// Check to see if we've already got an action/dobj count
+	// hidden in the dobj match.  This will happen if the player
+	// enters a bare verb (>FOOZLE) and responds to the
+	// object prompt ("What do you want to foozle?") with a count
+	// and a noun phrase (">10 PEBBLES")
 	if(gAction.dobjMatch && gAction.dobjMatch.newMatch
 		&& gAction.dobjMatch.newMatch.num_) {
 		gAction.numMatch = new NumberProd();
-		gAction.numMatch.getval = gAction.dobjMatch.newMatch.num_.getval();
-		//aioSay('\n\tnum = <<toString(gAction.dobjMatch.newMatch.num_.getval())>>\n ');
+		gAction.numMatch.getval = gAction.dobjMatch
+			.newMatch.num_.getval();
 	}
+
 	// We check to see if we already have a count on the action.
 	// If we do, we take no action.
 	if(!gActionCount) {
@@ -128,6 +134,8 @@ tryAskingForCount() {
 			toInteger(rexGroup(1)[3]));
 		return;
 	}
+
+	// Next we check to see if the input is just a number word.
 	if(rexMatch('^<space>*(<Alpha>+)<space>*$', str) != nil) {
 		n = spelledNumber.parseTokens(Tokenizer.tokenize(
 			rexGroup(1)[3]), cmdDict);

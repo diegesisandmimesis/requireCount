@@ -26,17 +26,9 @@ gameMain: GameMainDef initialPlayerChar = me;
 
 DefineTAction(Draw);
 VerbRule(Draw)
-	'draw' singleNumber dobjList : DrawAction
+	'draw' dobjCount dobjList : DrawAction
 	verbPhrase = 'draw/drawing (what)'
 ;
-
-/*
-DefineTAction(DrawCount);
-VerbRule(DrawCount)
-	'draw' singleNumber dobjList : DrawCountAction
-	verbPhrase = 'draw/drawing (what)'
-;
-*/
 
 modify Thing
 	dobjFor(Draw) {
@@ -44,7 +36,6 @@ modify Thing
 			illogical('{You/He} can\'t draw {that dobj/him}. ');
 		}
 	}
-	//dobjFor(DrawCount) { action() { replaceAction(Draw, self); } }
 ;
 
 class Card: Thing '(blank) playing card' 'playing card'
@@ -58,24 +49,11 @@ class CardUnthing: Unthing '(single) (individual) playing card' 'card'
 		verify() { dangerous; }
 		action() { replaceActionWithCount(Draw, deck.cards); }
 	}
-/*
-	dobjFor(DrawCount) {
-		verify() { dangerous; }
-		action() {
-			replaceActionWithCount(DrawCount, deck.cards);
-		}
-	}
-*/
 ;
 
 class CardsUnthing: CardUnthing 'playing cards' 'cards'
 	isPlural = true
-/*
-	dobjFor(Draw) {
-		verify() {}
-		action() { replaceAction(DrawCount, self); }
-	}
-*/
+
 	dobjFor(Draw) {
 		verify() {}
 		action() {
@@ -94,13 +72,9 @@ startRoom: Room 'Void' "This is a featureless void. ";
 +me: Person;
 +deck: Thing 'deck (of) (card)/cards' 'deck of cards'
 	"It's a deck of playing cards. "
+
 	cards = (contents.valWhich({ x: x.ofKind(CardsUnthing) }))
-/*
-	dobjFor(Draw) {
-		verify() { }
-		action() { replaceAction(Draw, cards); }
-	}
-*/
+
 	dobjFor(Draw) {
 		verify() { }
 		action() {
