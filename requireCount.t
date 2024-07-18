@@ -54,11 +54,6 @@ requireCountModuleID: ModuleID {
         listingOrder = 99
 }
 
-grammar countNounPhrase(number):
-	numberPhrase->quant_ nounPhrase->np_
-	: LayeredNounPhraseProd
-;
-
 // Library message for the "how many" question.
 // Similar to askMissingObject() in adv3/en_us/msg_neu.t
 modify playerMessages
@@ -78,9 +73,13 @@ modify playerMessages
 // handling the response.
 // The requireCount macro points to this function.
 _requireCount() {
+aioSay('\ngAction = <<toString(gAction)>>\n ');
+aioSay('\nliteral = <<toString(gLiteral)>>\n ');
+aioSay('\nnum = <<toString(gAction.num_)>>\n ');
+aioSay('\nquant = <<toString(gAction.quant_)>>\n ');
 	// We check to see if we already have a count on the action.
 	// If we do, we take no action.
-	if(!gAction.numMatch || (gAction.numMatch.getval == 0)) {
+	if(!gActionCount) {
 		// Display the prompt.
 		gActor.getParserMessageObj().askMissingCount(gActor, gAction,
 			nil, gDobj);
@@ -97,7 +96,7 @@ _requireCount() {
 // parser and try to handle it as a normal command.
 // This is similar to tryAskingForObject() in adv3/parser.t
 tryAskingForCount() {
-	local str, toks;
+	local n, str, toks;
 
 	// Display a normal prompt and handle input normally.
 	str = readMainCommandTokens(rmcAskObject);
@@ -127,6 +126,15 @@ tryAskingForCount() {
 			toInteger(rexGroup(1)[3]));
 		return;
 	}
+	if(rexMatch('^<space>*(<Alpha>+)<space>*$', str) != nil) {
+		n = spelledNumber.parseTokens(Tokenizer.tokenize(
+			rexGroup(1)[3]), cmdDict);
+		if(n.length > 0) {
+			gAction.retryWithMissingCount(gAction,
+				n[1].num_.getval());
+			return;
+		}
+	}
 
 	// Try seeing if the input looks like a noun phrase with a count,
 	// which will happen if the player responds to the "how many pebbles
@@ -147,7 +155,7 @@ _tryAskingForCountPhrase(str, toks) {
 	local matchList, rankings, res;
 
 	// See if the input looks like a noun phrase with a count.
-	matchList = countNounPhrase.parseTokens(toks, cmdDict);
+	matchList = nounPhrase.parseTokens(toks, cmdDict);
 
 	// Nope, bail.
 	if(!matchList || !matchList.length)
@@ -245,22 +253,3 @@ _replaceActionWithCount(actor, actionClass, count, [objs]) {
 	execNestedAction(true, nil, actor, action);
 	exit;
 }
-
-class TActionWithCount: TAction
-;
-
-grammar singleCount(empty): [badness 400] : EmptyLiteralPhraseWithCountProd
-	resolveLiteral(results) {}
-;
-
-grammar singleCount(digits): tokInt->num_ : NumberProd
-	getval() { return(toInteger(num_)); }
-	getStrVal() { return(num_); }
-;
-
-grammar singleCount(spelled): spelledNumber->num_ : NumberProd
-	getval() { return num_.getval(); }
-;
-
-class EmptyLiteralPhraseWithCountProd: EmptyLiteralPhraseProd
-;
