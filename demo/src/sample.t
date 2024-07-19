@@ -104,6 +104,7 @@ VerbRule(Foozle)
 	'foozle' dobjListWithCount
 	: FoozleAction
 	verbPhrase = 'foozle/foozling (what)'
+	requireRealCount = true
 ;
 
 // Generic handler for >FOOZLE.

@@ -12,6 +12,8 @@
 
 // Class for TActions with required counts.
 class TActionWithCount: TAction
+	requireRealCount = nil
+
 	// Base production to use for handling missing dobjs.
 	askDobjResponseProd = _nounListWithCount
 

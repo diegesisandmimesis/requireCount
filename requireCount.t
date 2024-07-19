@@ -102,6 +102,15 @@ _requireCount() {
 		// Get the player input.
 		tryAskingForCount();
 	}
+
+	// See if we need to require as many in-game objects as the
+	// count.
+	if(gAction.requireRealCount &&
+		(gActionCount > gAction.savedDobjList.length)) {
+		new BasicResolveResults().insufficientQuantity(
+			gAction.dobjList_[1].np_.getOrigText(),
+			gAction.dobjList_, gActionCount);
+	}
 }
 
 // A little mini-parser for handling the response to the number question.
