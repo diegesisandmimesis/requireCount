@@ -28,6 +28,20 @@ gameMain: GameMainDef initialPlayerChar = me;
 modify playerActionMessages
 	// Generic failure message for >DRAW
 	cantDrawThat = '{You/He} can\'t draw {that dobj/him}. '
+
+	// Success message for >DRAW CARDS
+	okayDrawCards(n) {
+		return('{You/He} draw{s} <<spellInt(n)>> card<<((n == 1)
+			? '' : 's')>>. ');
+	}
+
+	// Generic failure message for >FOOZLE
+	cantFoozleThat = '{You/He} can\'t foozle that. '
+
+	okayFoozle(n, obj) {
+		return('{You/He} foozle{s} <<spellInt(n)>>
+			<<(n != 1) ? obj.pluralName : obj.name>>. ');
+	}
 ;
 
 // First, a TActionWithCount that DOES NOT rely on the actual
@@ -62,7 +76,8 @@ class Card: Thing '(blank) playing card' 'playing card'
 // Main thing that we do is catch the action and remap it to >DRAW CARDS
 // where "cards" will be the plural Unthing living in the deck object.
 class CardUnthing: Unthing '(single) (individual) playing card' 'card'
-	notHereMsg = 'Nope. '
+	notHereMsg = 'The only thing you can do with the cards is
+		<b>&gt;DRAW</b> them. '
 	dobjFor(Draw) {
 		verify() { dangerous; }
 		action() { replaceActionWithCount(Draw, deck.cards); }
@@ -77,17 +92,13 @@ class CardsUnthing: CardUnthing 'playing cards' 'cards'
 	dobjFor(Draw) {
 		verify() {}
 		action() {
-			local n;
-
 			// Macro to handle displaying the "How many?" question
 			// prompt and parsing the player response.
 			requireCount;
 
 			// The way requireCount works we know that if we've
 			// reached this point we'll have a numMatch to use.
-			n = gAction.numMatch.getval();
-			defaultReport('{You/He} draw{s} <<spellInt(n)>>
-				card<<((n == 1) ? '' : 's')>>. ');
+			defaultReport(&okayDrawCards, gActionCount);
 		}
 	}
 ;
@@ -107,9 +118,7 @@ VerbRule(Foozle)
 ;
 
 modify Thing
-	dobjFor(Foozle) {
-		verify() { illogical('{You/He} can\'t foozle that. '); }
-	}
+	dobjFor(Foozle) { verify() { illogical(&cantFoozleThat); } }
 ;
 
 class FoozleThing: Thing
@@ -117,9 +126,8 @@ class FoozleThing: Thing
 		verify() {}
 		action() {
 			requireCount;
-			defaultReport('{You/He} foozle{s}
-				<<spellInt(gActionCount)>>
-				<<(gActionCount != 1) ? pluralName : name>>. ');
+
+			defaultReport(&okayFoozle, gActionCount, self);
 		}
 	}
 ;
@@ -156,4 +164,3 @@ startRoom: Room 'Void' "This is a featureless void. ";
 +Rock;
 +Rock;
 +Rock;
-

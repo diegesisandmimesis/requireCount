@@ -56,7 +56,7 @@ startRoom: Room 'Void' "This is a featureless void. ";
 		}
 	}
 ;
-++Component 'pebble*pebbles' 'pebbles'
+++Component 'pebble*pebbles' 'pebble'
 	"They're infinite. "
 	dobjFor(Take) {
 		verify() {}
