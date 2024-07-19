@@ -43,17 +43,9 @@ VerbRule(Draw)
 	//	dobjList, but we could also use singleDobj here, because
 	//	we're ALSO defining useDobjListForCount = nil below.  If
 	//	we were NOT doing that, we'd have to use dobjList.
-	//'draw' dobjCount dobjList
 	'draw' singleDobjWithCount
-	//'draw' dobjListWithCount
 	: DrawAction
 	verbPhrase = 'draw/drawing (what)'
-
-	//askDobjResponseProd = _nounWithCount
-
-	// IMPORTANT:  This is what turns off the "use real objects"
-	//	behavior.
-	//useDobjListForCount = nil
 ;
 
 // Default handler for the new verb.
@@ -109,7 +101,6 @@ class CardsUnthing: CardUnthing 'playing cards' 'cards'
 // a count of 2 (because it's the explicit count).
 DefineTActionWithCount(Foozle);
 VerbRule(Foozle)
-	//'foozle' dobjCount dobjWithCount
 	'foozle' dobjListWithCount
 	: FoozleAction
 	verbPhrase = 'foozle/foozling (what)'

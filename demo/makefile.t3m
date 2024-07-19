@@ -7,5 +7,4 @@
 -lib adv3/adv3
 -lib ../requireCount
 -source src/sample.t
--source src/samplePatch.t
 -source reflect.t

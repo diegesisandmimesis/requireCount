@@ -89,19 +89,13 @@ _requireCount() {
 	// enters a bare verb (>FOOZLE) and responds to the
 	// object prompt ("What do you want to foozle?") with a count
 	// and a noun phrase (">10 PEBBLES")
-/*
-	if(!gActionCount && gAction.dobjMatch && gAction.dobjMatch.newMatch
-		&& gAction.dobjMatch.newMatch.num_) {
-		gAction.numMatch = new NumberProd();
-		gAction.numMatch.getval = gAction.dobjMatch
-			.newMatch.num_.getval();
-	}
-*/
 	if(!gActionCount && (gActionDobjMatchCount != nil)) {
 		gAction.numMatch = new NumberProd();
 		gAction.numMatch.getval = gActionDobjMatchCount;
 	}
 
+	// Some productions squash numMatch, so as a fallback we can use
+	// a bespoke property on Action to pass a count.
 	if(!gActionCount && (gAction._retryCount != nil)) {
 		gAction.numMatch = new NumberProd();
 		gAction.numMatch.getval = gAction._retryCount;
@@ -147,14 +141,11 @@ tryAskingForCount() {
 	// Input String.
 	str = str[1];
 
-aioSay('\n==str = <<toString(str)>>\n ');
-
 	// If the input was just a number and whitespace we can immediately
 	// punt this off to our logic for handling it in Action.
 	if(rexMatch('^<space>*(<Digit>+)<space>*$', str) != nil) {
 		// The input was a number, so we use our bespoke retry
 		// method on Action.
-aioSay('\ndobj = <<toString(gDobj)>>\n ');
 		gAction.retryWithMissingCount(gAction,
 			toInteger(rexGroup(1)[3]));
 		return;
@@ -219,6 +210,10 @@ _tryAskingForCountPhrase(str, toks) {
 }
 
 modify Action
+	// Somewhat kludgy fallback.  Some productions appear to squash
+	// numMatch (so it gets lost between here and the check in
+	// _requireCount()), so here we use our own property to pass
+	// the count when all else fails.
 	_retryCount = nil
 
 	// Add a retry method for re-running an action with a count.
@@ -227,19 +222,18 @@ modify Action
 	retryWithMissingCount(orig, n) {
 		local action;
 
-aioSay('\nretryWithMissingCount(<<toString(n)>>)\n ');
 		// Create a copy of the given action.
 		action = createForRetry(orig);
 
+		// Copy the object data.
 		action.initForMissingCount(orig);
 
+		// Our kludge to deal with productions that lose numMatch.
 		_retryCount = n;
 
 		// Set the value of numMatch on the action.
 		action.numMatch = new NumberProd();
 		action.numMatch.getval = n;
-aioSay('\n\taction = <<toString(action)>>\n ');
-aioSay('\n\tval = <<toString(action.numMatch.getval())>>\n ');
 
 		resolveAndReplaceAction(action);
 	}
@@ -251,11 +245,9 @@ aioSay('\n\tval = <<toString(action.numMatch.getval())>>\n ');
 	_initForMissingDobj(orig) {
 		local origDobj;
 
-aioSay('\ninitForMissingDobj()\n ');
 		origDobj = orig.getDobj();
 		dobjMatch = new PreResolvedProd(origDobj != nil
 			? origDobj : orig.dobjList_);
-aioSay('\ndobjMatch = <<toString(origDobj)>>\n ');
 	}
 
 	// Copy the iobj information, if any, from the original action.
