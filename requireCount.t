@@ -8,11 +8,13 @@
 //
 // USAGE
 //
-//	Declare a verb containing the dobjCount macro where
-//	a count should go:
+//	Declare an Action with the DefinteTActionWithCount macro, then
+//	a VerbRule for it containing the singleDobjWithCount or
+//	dobjListWithCount macro:
 //
+//		DefineTActionWithCount(Foozle);
 //		VerbRule(Foozle)
-//			'foozle' dobjCount dobjList
+//			'foozle' dobjListWithCount
 //			: FoozleAction
 //			verbPhrase = 'foozle/foozling (what)'
 //		;
@@ -68,17 +70,6 @@ modify playerMessages
 			+ '?<./parser> ');
 	}
 ;
-
-_debugAction(obj) {
-	local l;
-
-	l = obj.getPropList();
-	l.sort(nil, { a, b: toString(a).compareTo(toString(b)) });
-	l = l.subset({ x: obj.propDefined(x, PropDefDirectly) });
-	l.forEach(function(o) {
-		aioSay('\n\t<<toString(o)>>: <<toString(obj.(o))>>\n ');
-	});
-}
 
 // Global function for (maybe) displaying the question and then
 // handling the response.

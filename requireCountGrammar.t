@@ -10,14 +10,19 @@
 
 #include "requireCount.h"
 
+// Class for TActions with required counts.
 class TActionWithCount: TAction
+	// Base production to use for handling missing dobjs.
 	askDobjResponseProd = _nounListWithCount
 
+	// Saved copy of the dobjList_ before truncation.
+	// Maybe a misfeature, see discussion below.
 	savedDobjList = nil
 
 	resolveNouns(srcActor, dstActor, results) {
 		local n;
 
+		// Do whatever we'd normally do.
 		inherited(srcActor, dstActor, results);
 
 		// Various ways we might get our count out of the grammar.
@@ -61,41 +66,70 @@ class TActionWithCount: TAction
 	}
 ;
 
+//
+// Numeric count grammar.
+// Used by all the other count grammar rules.
+//
+
+// Production classes for the grammar rules below.
+class LiteralCountProd: NumberProd;
+class EmptyLiteralPhraseWithCountProd: EmptyLiteralPhraseProd;
+
+// Empty count.
 grammar nounCount(empty): [badness 400] : EmptyLiteralPhraseWithCountProd;
 
+// Numeric count.
 grammar nounCount(digits): tokInt->num_ : LiteralCountProd
 	getval() { return(toInteger(num_)); }
 	getStrVal() { return(num_); }
 ;
 
+// Spelled-out count.
 grammar nounCount(spelled): spelledNumber->num_ : LiteralCountProd
 	getval() { return num_.getval(); }
 ;
 
-class LiteralCountProd: NumberProd;
-class EmptyLiteralPhraseWithCountProd: EmptyLiteralPhraseProd;
 
-grammar _nounListWithCount(count):
-	(nounCount->num_ indetSingularNounPhrase->np_)
-	| (nounCount->num_ indetPluralNounPhrase->np_)
-	: NounListWithCountProd;
 
-grammar _nounListWithCount(empty): [badness 500] : EmptyNounPhraseProd;
+//
+// Noun list grammar.
+// Used by VerbRules that use dobjListWithCount.
+//
 
-grammar _nounWithCount(count):
-	nounCount->num_ singleNounOnly->np_
-	: LayeredNounPhraseWithCountProd;
-
-grammar _nounWithCount(empty): [badness 500] : EmptyNounPhraseProd;
-
+// Class for the grammar rules that follow.
 class NounListWithCountProd: NounListProd
 	resolveNouns(resolver, results) {
 		return(np_.resolveNouns(resolver, results));
 	}
 ;
 
+// Matches [count] [noun phrase].
+grammar _nounListWithCount(count):
+	(nounCount->num_ indetSingularNounPhrase->np_)
+	| (nounCount->num_ indetPluralNounPhrase->np_)
+	: NounListWithCountProd;
+
+// Matches an empty noun phrase.
+grammar _nounListWithCount(empty): [badness 500] : EmptyNounPhraseProd;
+
+
+
+//
+// Noun grammar.
+// This is for VerbRule declarations that use singleDobjWithCount
+//
+
+// Class for the grammar rules below.
 class LayeredNounPhraseWithCountProd: LayeredNounPhraseProd
 	resolveNouns(resolver, results) {
 		return(np_.resolveNouns(resolver, results));
 	}
 ;
+
+// Matches a count followed by a single noun.
+grammar _nounWithCount(count):
+	nounCount->num_ singleNounOnly->np_
+	: LayeredNounPhraseWithCountProd;
+
+// Matches an empty noun phrase.
+grammar _nounWithCount(empty): [badness 500] : EmptyNounPhraseProd;
