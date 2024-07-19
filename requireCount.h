@@ -4,7 +4,16 @@
 
 // Macro for VerbRule declarations.  Roughly equivalent to singleNumber
 // from adv3.
-#define dobjCount nounCount->numMatch
+#define dobjCount nounCount->num_
+
+// Macro for VerbRule declarations.  Matches 
+#define nounListWithCount _nounListWithCount->dobjMatch
+#define nounWithCount _nounWithCount->dobjMatch
+
+//#define dobjListWithCount (dobjCount nounListWithCount)
+#define dobjListWithCount (nounListWithCount)
+//#define singleDobjWithCount (dobjCount nounWithCount)
+#define singleDobjWithCount (nounWithCount)
 
 // Retuns the count associated with gAction, or nil if there isn't one.
 #define gActionCount ((gAction && gAction.numMatch) \
