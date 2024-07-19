@@ -53,10 +53,11 @@ modify playerActionMessages
 // vocabulary.
 DefineTActionWithCount(Draw);
 VerbRule(Draw)
-	// IMPORTANT:  We use dobjCount, which is required.  We also use
-	//	dobjList, but we could also use singleDobj here, because
-	//	we're ALSO defining useDobjListForCount = nil below.  If
-	//	we were NOT doing that, we'd have to use dobjList.
+	// IMPORTANT:  We use singleDobjWithCount.  In general this
+	//	is what you want to use when the objects the account
+	//	applies to are "virtual".  In this case there's a single
+	//	in-game object that "cards" applies to, but we want
+	//	something like >DRAW 10 CARDS to still work.
 	'draw' singleDobjWithCount
 	: DrawAction
 	verbPhrase = 'draw/drawing (what)'
@@ -75,22 +76,13 @@ class Card: Thing '(blank) playing card' 'playing card'
 // cards.  In our case this is specifically for >DRAW CARD.
 // Main thing that we do is catch the action and remap it to >DRAW CARDS
 // where "cards" will be the plural Unthing living in the deck object.
-class CardUnthing: Unthing '(single) (individual) playing card' 'card'
+class CardsUnthing: Unthing '(playing) card*cards' 'card'
+	// As a simulation object, our cards are just barely implemented.
 	notHereMsg = 'The only thing you can do with the cards is
 		<b>&gt;DRAW</b> them. '
+
 	dobjFor(Draw) {
 		verify() { dangerous; }
-		action() { replaceActionWithCount(Draw, deck.cards); }
-	}
-;
-
-// Plural Unthing.  This is for handling plural vocabularly for the cards.
-// Specifically for handling >DRAW CARDS.
-class CardsUnthing: CardUnthing 'playing cards' 'cards'
-	isPlural = true
-
-	dobjFor(Draw) {
-		verify() {}
 		action() {
 			// Macro to handle displaying the "How many?" question
 			// prompt and parsing the player response.
@@ -103,35 +95,34 @@ class CardsUnthing: CardUnthing 'playing cards' 'cards'
 	}
 ;
 
-// Now we define a "default" TActionWithCount.  This will use the number
-// of objects in the dobjList to get an implicit count if an explicit one
-// isn't given.
-// This means that if there's three pebbles, then >FOOZLE PEBBLE will
-// use a count of 1 (because it is singular), >FOOZLE PEBBLES will use a
-// count of 3 (all the available pebbles), and >FOOZLE 2 PEBBLES will use
-// a count of 2 (because it's the explicit count).
+// A generic action with a count.
 DefineTActionWithCount(Foozle);
 VerbRule(Foozle)
+	// This time we use dobjListWithCount.  This is for when we
+	// want the count for the action to correspond to the number of
+	// in-game objects available.
 	'foozle' dobjListWithCount
 	: FoozleAction
 	verbPhrase = 'foozle/foozling (what)'
 ;
 
-modify Thing
-	dobjFor(Foozle) { verify() { illogical(&cantFoozleThat); } }
-;
+// Generic handler for >FOOZLE.
+modify Thing dobjFor(Foozle) { verify() { illogical(&cantFoozleThat); } };
 
+// A class for objects that accept >FOOZLE.
 class FoozleThing: Thing
 	dobjFor(Foozle) {
 		verify() {}
 		action() {
+			// More or less identical to the >DRAW example
+			// above.
 			requireCount;
-
 			defaultReport(&okayFoozle, gActionCount, self);
 		}
 	}
 ;
 
+// Our >FOOZLE-able objects.
 class Pebble: FoozleThing '(small) (round) pebble*pebbles' 'pebble'
 	"A small, round pebble. "
 	isEquivalent = true
@@ -151,12 +142,9 @@ startRoom: Room 'Void' "This is a featureless void. ";
 
 	dobjFor(Draw) {
 		verify() { dangerous; }
-		action() {
-			replaceActionWithCount(Draw, deck.cards);
-		}
+		action() { replaceActionWithCount(Draw, deck.cards); }
 	}
 ;
-++CardUnthing;
 ++CardsUnthing;
 +Pebble;
 +Pebble;

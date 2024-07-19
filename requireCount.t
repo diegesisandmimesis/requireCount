@@ -142,15 +142,12 @@ tryAskingForCount() {
 		return;
 	}
 
-	// Next we check to see if the input is just a number word.
-	if(rexMatch('^<space>*(<Alpha>+)<space>*$', str) != nil) {
-		n = spelledNumber.parseTokens(Tokenizer.tokenize(
-			rexGroup(1)[3]), cmdDict);
-		if(n.length > 0) {
-			gAction.retryWithMissingCount(gAction,
-				n[1].num_.getval());
-			return;
-		}
+	// Next we check to see if the input is just a spelled-out number.
+	n = spelledNumber.parseTokens(Tokenizer.tokenize(
+		rexReplace('<^Alpha|Space>', str, ' ')), cmdDict);
+	if(n.length == 1) {
+		gAction.retryWithMissingCount(gAction, n[1].num_.getval());
+		return;
 	}
 
 	// Try seeing if the input looks like a noun phrase with a count,
