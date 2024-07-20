@@ -201,7 +201,6 @@ _tryAskingForCountPhrase(str) {
 	toks = Tokenizer.tokenize(str);
 
 	// See if the input looks like a noun phrase with a count.
-	//matchList = nounPhrase.parseTokens(toks, cmdDict);
 	matchList = _nounListWithCount.parseTokens(toks, cmdDict);
 
 	// Nope, bail.
