@@ -12,7 +12,14 @@
 
 // Class for TActions with required counts.
 class TActionWithCount: TAction
+	// If true, then the action will fail if there aren't enough
+	// in-game objects to cover the count.
 	requireRealCount = nil
+
+	// If true, the dobjList will be truncated to a single object.
+	// The full original list will always be saved as savedDobjList
+	// regardless of this value.
+	truncateDobjList = true
 
 	// Base production to use for handling missing dobjs.
 	askDobjResponseProd = _nounListWithCount
@@ -63,7 +70,8 @@ class TActionWithCount: TAction
 		// retain whatever the parser DID manage to work out.
 		if(dobjList_ && dobjList_.length) {
 			savedDobjList = dobjList_;
-			dobjList_ = [ dobjList_[1] ];
+			if(truncateDobjList)
+				dobjList_ = [ dobjList_[1] ];
 		}
 	}
 ;

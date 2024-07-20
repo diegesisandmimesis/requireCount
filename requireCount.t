@@ -107,6 +107,25 @@ _requireCount() {
 	// count.
 	if(gAction.requireRealCount &&
 		(gActionCount > gAction.savedDobjList.length)) {
+
+		// Special case.  The count is larger than the length of
+		// the dobjList, but because _retryCount is set that
+		// PROBABLY means that we got here via the three-step
+		// interactive process (>FOOZLE, "What do you want to foozle?",
+		// >PEBBLE, "How many pebbles do you want to foozle?", >5),
+		// and if that happens we'll can end up with a single dobj
+		// even if there are more objects in scope that would've
+		// matched if we started out with a count.  So we do
+		// another special check here, consisting of trying to
+		// re-(re-)run the command
+		if((gAction.savedDobjList.length == 1)
+			&& (gAction._retryCount != nil)) {
+			throw new ReplacementCommandStringException(
+				gAction.getOrigText() + ' '
+				+ toString(gActionCount) + ' '
+				+ gDobj.pluralName, nil, nil);
+		}
+
 		new BasicResolveResults().insufficientQuantity(
 			gAction.dobjList_[1].np_.getOrigText(),
 			gAction.dobjList_, gActionCount);
@@ -120,7 +139,8 @@ _requireCount() {
 // parser and try to handle it as a normal command.
 // This is similar to tryAskingForObject() in adv3/parser.t
 tryAskingForCount() {
-	local n, str, toks;
+	local n, str;
+	//local n, str, toks;
 
 	// Display a normal prompt and handle input normally.
 	str = readMainCommandTokens(rmcAskObject);
@@ -136,7 +156,7 @@ tryAskingForCount() {
 		throw new ReplacementCommandStringException(nil, nil, nil);
 
 	// Input tokens.
-	toks = str[2];
+	//toks = str[2];
 
 	// Input String.
 	str = str[1];
@@ -154,6 +174,7 @@ tryAskingForCount() {
 	// Next we check to see if the input is just a spelled-out number.
 	n = spelledNumber.parseTokens(Tokenizer.tokenize(
 		rexReplace('<^Alpha|Space>', str, ' ')), cmdDict);
+
 	if(n.length == 1) {
 		gAction.retryWithMissingCount(gAction, n[1].num_.getval());
 		return;
@@ -166,7 +187,7 @@ tryAskingForCount() {
 	// We don't check the return value because if the input looks
 	// like a noun phrase it'll try to exit the current command
 	// and execute the new one.
-	_tryAskingForCountPhrase(str, toks);
+	_tryAskingForCountPhrase(str);
 
 	// Everything is terrible, give up.
 	// We punt the command string back to the parser via exception.
@@ -174,15 +195,19 @@ tryAskingForCount() {
 }
 
 
-_tryAskingForCountPhrase(str, toks) {
-	local matchList, rankings, res;
+_tryAskingForCountPhrase(str) {
+	local matchList, rankings, res, toks;
+
+	toks = Tokenizer.tokenize(str);
 
 	// See if the input looks like a noun phrase with a count.
-	matchList = nounPhrase.parseTokens(toks, cmdDict);
+	//matchList = nounPhrase.parseTokens(toks, cmdDict);
+	matchList = _nounListWithCount.parseTokens(toks, cmdDict);
 
 	// Nope, bail.
-	if(!matchList || !matchList.length)
+	if(!matchList || !matchList.length) {
 		return;
+	}
 
 	// Ask the current actions dobj resolver to figure out
 	// if the thing that looks like a noun phrase with a count
@@ -192,18 +217,32 @@ _tryAskingForCountPhrase(str, toks) {
 
 	// Didn't work, bail.
 	if((rankings[1].nonMatchCount != 0)
-		&& (rankings[1].miscWordListCount != 0))
+		&& (rankings[1].miscWordListCount != 0)) {
 		return;
+	}
 
 	// Everything else worked, but somehow or other we reached this
 	// point without actually getting a count out of it.  This
 	// should never happen.
-	if(!rankings[1].match.quant_)
+	if(!rankings[1].match.num_) {
 		return;
+	}
 
 	// Retry the old command with the new count.
 	gAction.retryWithMissingCount(gAction,
-		rankings[1].match.quant_.getval());
+		rankings[1].match.num_.getval());
+}
+
+_debugObject(obj) {
+	local l;
+
+	aioSay('\n<<toString(obj)>>:\n ');
+	l = obj.getPropList();
+	l = l.sort(nil, { a, b: toString(a).compareTo(toString(b)) });
+	l = l.subset({ x: obj.propDefined(x, PropDefDirectly) });
+	l.forEach(function(o) {
+		aioSay('\n\t<<toString(o)>>: <<toString(obj.(o))>>\n ');
+	});
 }
 
 modify Action
@@ -226,7 +265,7 @@ modify Action
 		action.initForMissingCount(orig);
 
 		// Our kludge to deal with productions that lose numMatch.
-		_retryCount = n;
+		action._retryCount = n;
 
 		// Set the value of numMatch on the action.
 		action.numMatch = new NumberProd();
